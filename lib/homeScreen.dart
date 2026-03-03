@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
 import 'article_detail_screen.dart';
 import 'screen.dart';
 import 'emergency_screen.dart';
 import 'profilePage.dart';
-import 'organ_info_screen.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'whatIsOrganDonationPage.dart';
+import 'howItWorksPage.dart';
+import 'impactPage.dart';
+import 'whoCanDonatePage.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +19,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final PageController _pageController = PageController(viewportFraction: 0.9);
+  final PageController _pageController =
+  PageController(viewportFraction: 0.9);
+
   int _selectedIndex = 0;
 
   static const List<Map<String, String>> newsList = [
@@ -62,91 +68,36 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
-
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               _buildHeader(),
-
               _buildRegisterDonorSection(context),
-
               const SizedBox(height: 10),
-
               _buildOrganInfoCarousel(context),
-
               const SizedBox(height: 20),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Latest Medical Articles",
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-
+              _buildArticleTitle(),
               const SizedBox(height: 10),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: newsList.length,
-                itemBuilder: (context, index) {
-                  return _buildNewsCard(context, newsList[index]);
-                },
-              ),
-
+              _buildNewsList(),
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
-
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onNavTap,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: Colors.lightGreen,
-          unselectedItemColor: Colors.black45,
-          selectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12),
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.warning), label: 'Emergency'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
-      ),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // 🔥 HEADER
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
@@ -156,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
           "Hello User",
           style: GoogleFonts.poppins(
             fontSize: 28,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
         ),
@@ -164,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🫀 DONOR BUTTONS
   Widget _buildRegisterDonorSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -175,12 +125,10 @@ class _HomeScreenState extends State<HomeScreen> {
             "Register Yourself as a Donor",
             style: GoogleFonts.poppins(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
-
           const SizedBox(height: 16),
-
           Row(
             children: [
               Expanded(
@@ -201,7 +149,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => OrganDonationScreen()),
+                        builder: (_) => OrganDonationScreen(),
+                      ),
                     );
                   },
                   child: _bigDonorButton(
@@ -248,7 +197,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 📚 CAROUSEL
   Widget _buildOrganInfoCarousel(BuildContext context) {
     final List<Map<String, String>> infoList = [
       {
@@ -285,27 +233,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
               return GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          OrganInfoScreen(type: item["type"]!),
-                    ),
-                  );
+                  if (item["type"] == "what") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                        const whatIsOrganDonationPage(type: "what"),
+                      ),
+                    );
+                  } else if (item["type"] == "how") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HowItWorksScreen(),
+                      ),
+                    );
+                  } else if (item["type"] == "impact") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ImpactOnSocietyPage(type: '',),
+                      ),
+                    );
+                  } else if (item["type"] == "who") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                        const WhoCanDonatePage(type: '',),
+                      ),
+                    );
+                  }
                 },
                 child: Container(
-                  margin: const EdgeInsets.only(left: 3, right: 3),
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.00),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
                   ),
                   child: Row(
                     children: [
@@ -315,15 +280,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.green.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child:
-                        const Icon(Icons.menu_book, color: Colors.green),
+                        child: const Icon(
+                          Icons.menu_book,
+                          color: Colors.green,
+                        ),
                       ),
                       const SizedBox(width: 12),
-
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          mainAxisAlignment:
+                          MainAxisAlignment.center,
                           children: [
                             Text(
                               item["title"]!,
@@ -343,8 +311,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-
-                      const Icon(Icons.arrow_forward_ios, size: 16),
+                      const Icon(Icons.arrow_forward_ios,
+                          size: 16),
                     ],
                   ),
                 ),
@@ -352,10 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
         ),
-
         const SizedBox(height: 10),
-
-        // 🔥 DOT INDICATOR
         SmoothPageIndicator(
           controller: _pageController,
           count: infoList.length,
@@ -371,14 +336,45 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-  // 📰 NEWS
-  Widget _buildNewsCard(BuildContext context, Map<String, String> news) {
+
+  Widget _buildArticleTitle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          "Latest Medical Articles",
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewsList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: newsList.length,
+      itemBuilder: (context, index) {
+        return _buildNewsCard(context, newsList[index]);
+      },
+    );
+  }
+
+  Widget _buildNewsCard(
+      BuildContext context, Map<String, String> news) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ArticleDetailScreen(news: news),
+            builder: (_) =>
+                ArticleDetailScreen(news: news),
           ),
         );
       },
@@ -396,11 +392,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28)),
               child: Image.asset(
                 news["image"]!,
                 height: 170,
@@ -424,7 +421,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showComingSoon(BuildContext context, String title) {
+  Widget _buildBottomNav() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavTap,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        selectedItemColor: Colors.lightGreen,
+        unselectedItemColor: Colors.black45,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.warning),
+              label: 'Emergency'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+
+  void _showComingSoon(
+      BuildContext context, String title) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("$title - Coming Soon")),
     );
