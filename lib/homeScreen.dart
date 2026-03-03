@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController =
   PageController(viewportFraction: 0.9);
 
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Always 0 for Home
 
   static const List<Map<String, String>> newsList = [
     {
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   void _onNavTap(int index) {
-    setState(() => _selectedIndex = index);
+    if (index == 0) return;
 
     if (index == 1) {
       Navigator.push(
@@ -252,15 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ImpactOnSocietyPage(type: '',),
+                        builder: (_) => ImpactOnSocietyPage(type: ''),
                       ),
                     );
                   } else if (item["type"] == "who") {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                        const WhoCanDonatePage(type: '',),
+                        builder: (_) => const WhoCanDonatePage(type: ''),
                       ),
                     );
                   }
@@ -311,8 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios,
-                          size: 16),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
                     ],
                   ),
                 ),
@@ -447,8 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
               icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.warning),
-              label: 'Emergency'),
+              icon: Icon(Icons.warning), label: 'Emergency'),
           BottomNavigationBarItem(
               icon: Icon(Icons.person), label: 'Profile'),
         ],

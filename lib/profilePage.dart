@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:organ_donation_app/homeScreen.dart';
+import 'emergency_screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -9,9 +11,14 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final TextEditingController fullName = TextEditingController(text: "Atharva Kumkar");
-  final TextEditingController email = TextEditingController(text: "atharva@email.com");
-  final TextEditingController age = TextEditingController(text: "21");
+  final TextEditingController fullName =
+  TextEditingController(text: "Atharva Kumkar");
+  final TextEditingController email =
+  TextEditingController(text: "atharva@email.com");
+  final TextEditingController age =
+  TextEditingController(text: "21");
+
+  int _selectedIndex = 2; // Profile selected
 
   @override
   void dispose() {
@@ -21,56 +28,77 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
+  void _onNavTap(int index) {
+    if (index == _selectedIndex) return;
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const EmergencyScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
+
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
                 const SizedBox(height: 10),
 
-                // Title
+                /// Title
                 Text(
                   "Profile",
                   style: GoogleFonts.poppins(
-                    fontSize: 42,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Colors.lightGreen,
                   ),
                 ),
 
                 const SizedBox(height: 30),
 
-                // Profile Image Section
+                /// Profile Image
                 Center(
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 55,
                         backgroundColor: Colors.white,
-                        child: Icon(
+                        child: const Icon(
                           Icons.person,
                           size: 55,
                           color: Colors.black38,
                         ),
                       ),
-
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.lightGreen,
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white, size: 18),
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             onPressed: () {},
                           ),
                         ),
@@ -81,7 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 35),
 
-                // Fields
+                /// Fields
                 _buildPillTextField(
                   controller: fullName,
                   label: "Full Name",
@@ -105,20 +133,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 30),
 
-                // Save Button
+                /// Save Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Save logic
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius:
+                        BorderRadius.circular(32),
                       ),
                     ),
                     child: Text(
@@ -133,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 18),
 
-                // Logout Button
+                /// Logout Button
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -141,9 +168,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () {},
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.black12, width: 1.2),
+                      side: const BorderSide(
+                          color: Colors.black12, width: 1.2),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius:
+                        BorderRadius.circular(32),
                       ),
                     ),
                     child: Text(
@@ -163,6 +192,40 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+
+      /// ✅ SAME BOTTOM NAVBAR
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onNavTap,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedItemColor: Colors.lightGreen,
+          unselectedItemColor: Colors.black45,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.warning),
+                label: 'Emergency'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
+      ),
     );
   }
 
@@ -175,26 +238,33 @@ class _ProfilePageState extends State<ProfilePage> {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+      style: GoogleFonts.poppins(
+          fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: GoogleFonts.poppins(color: Colors.black45, fontSize: 14),
-        prefixIcon: Icon(icon, size: 20, color: Colors.black45),
+        hintStyle: GoogleFonts.poppins(
+            color: Colors.black45, fontSize: 14),
+        prefixIcon:
+        Icon(icon, size: 20, color: Colors.black45),
         filled: true,
         fillColor: Colors.white,
         contentPadding:
-        const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        const EdgeInsets.symmetric(
+            vertical: 16, horizontal: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.black12, width: 1),
+          borderSide: const BorderSide(
+              color: Colors.black12, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.black12, width: 1),
+          borderSide: const BorderSide(
+              color: Colors.black12, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.lightGreen, width: 1.8),
+          borderSide: const BorderSide(
+              color: Colors.lightGreen, width: 1.8),
         ),
       ),
     );

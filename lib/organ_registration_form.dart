@@ -50,6 +50,7 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Colors.lightGreen,
                       ),
                     ),
                   ],
@@ -58,15 +59,14 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                 const SizedBox(height: 20),
 
                 // 💚 INFO CARD
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: _cardDecoration(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     "Register as ${widget.selectedOrgan} Donor",
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
                 ),
@@ -87,20 +87,23 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                 const SizedBox(height: 24),
 
                 // 📤 UPLOAD CARD
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: _cardDecoration(),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.upload_file, size: 36, color: Colors.lightGreen),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Upload Identity Document",
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: _cardDecoration(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.upload_file, size: 36, color: Colors.lightGreen),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Upload Identity Document",
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
@@ -116,7 +119,7 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "${widget.selectedOrgan} Registration Successful 💚",
+                              "${widget.selectedOrgan} Registration Successful",
                               style: GoogleFonts.poppins(),
                             ),
                           ),
@@ -133,7 +136,8 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                     child: Text(
                       "Complete Registration",
                       style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
                         fontSize: 15,
                       ),
                     ),
