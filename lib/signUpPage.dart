@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/auth.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -142,7 +143,43 @@ class _SignUpPageState extends State<SignUpPage> {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                        if (passWord.text != confirmPassword.text) {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Passwords do not match")),
+                        );
+                        return;
+                        }
+
+                        if (fullName.text.isEmpty ||
+                           email.text.isEmpty ||
+                             age.text.isEmpty ||
+                             passWord.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Please fill all fields")),
+                          );
+                           return;
+                          }
+
+                            final result = await AuthService().signUp(
+                             email: email.text.trim(),
+                              password: passWord.text.trim(),
+                              name: fullName.text.trim(),
+                               age: int.parse(age.text.trim()),
+                              );
+
+                             if (result == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Signup Successful")),
+                               );
+
+                            Navigator.pop(context); // Go back to Login
+                           } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                           SnackBar(content: Text(result)),
+                           );
+                         }
+                      },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen,
                       foregroundColor: Colors.white,

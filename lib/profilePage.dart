@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../services/user_service.dart';
+import '../model/user_model.dart';
+import 'loginPage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -9,9 +16,123 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final TextEditingController fullName = TextEditingController(text: "Atharva Kumkar");
-  final TextEditingController email = TextEditingController(text: "atharva@email.com");
-  final TextEditingController age = TextEditingController(text: "21");
+  final TextEditingController fullName = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController age = TextEditingController();
+
+  final UserService _userService = UserService();
+  bool _isLoading = true;
+
+  File? _selectedImage;
+  String? _photoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      final userData = await _userService.getUser(currentUser.uid);
+
+      if (userData != null) {
+        fullName.text = userData.fullName;
+        email.text = userData.email;
+        age.text = userData.age.toString();
+        _photoUrl = userData.photoUrl;
+      }
+    }
+
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _pickImage() async {
+    final picked =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
+    }
+  }
+
+  Future<String?> _uploadProfileImage(String uid) async {
+    if (_selectedImage == null) return _photoUrl;
+
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('profile_images')
+        .child('$uid.jpg');
+
+    await ref.putFile(_selectedImage!);
+    return await ref.getDownloadURL();
+  }
+
+  Future<void> _saveChanges() async {
+    if (fullName.text.isEmpty || age.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Name and Age cannot be empty")),
+      );
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    setState(() => _isLoading = true);
+
+    String? updatedPhotoUrl =
+        await _uploadProfileImage(currentUser.uid);
+
+    UserModel updatedUser = UserModel(
+      uid: currentUser.uid,
+      fullName: fullName.text.trim(),
+      email: email.text.trim(),
+      age: int.parse(age.text.trim()),
+      photoUrl: updatedPhotoUrl,
+    );
+
+    await _userService.updateUser(updatedUser);
+
+    setState(() {
+      _photoUrl = updatedPhotoUrl;
+      _selectedImage = null;
+      _isLoading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Profile Updated Successfully")),
+    );
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (_selectedImage != null) {
+      return FileImage(_selectedImage!);
+    }
+    if (_photoUrl != null && _photoUrl!.isNotEmpty) {
+      return NetworkImage(_photoUrl!);
+    }
+    return null;
+  }
+
+  bool _showDefaultIcon() {
+    return _selectedImage == null &&
+        (_photoUrl == null || _photoUrl!.isEmpty);
+  }
 
   @override
   void dispose() {
@@ -23,19 +144,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 const SizedBox(height: 10),
 
-                // Title
                 Text(
                   "Profile",
                   style: GoogleFonts.poppins(
@@ -47,31 +173,33 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 30),
 
-                // Profile Image Section
                 Center(
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 55,
                         backgroundColor: Colors.white,
-                        child: Icon(
-                          Icons.person,
-                          size: 55,
-                          color: Colors.black38,
-                        ),
+                        backgroundImage: _getProfileImage(),
+                        child: _showDefaultIcon()
+                            ? const Icon(
+                                Icons.person,
+                                size: 55,
+                                color: Colors.black38,
+                              )
+                            : null,
                       ),
-
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.lightGreen,
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white, size: 18),
-                            onPressed: () {},
+                            icon: const Icon(Icons.edit,
+                                color: Colors.white, size: 18),
+                            onPressed: _pickImage,
                           ),
                         ),
                       )
@@ -81,19 +209,22 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 35),
 
-                // Fields
                 _buildPillTextField(
                   controller: fullName,
                   label: "Full Name",
                   icon: Icons.person_outline,
+                  enabled: true,
                 ),
+
                 const SizedBox(height: 14),
 
                 _buildPillTextField(
                   controller: email,
                   label: "Email Address",
                   icon: Icons.email_outlined,
+                  enabled: false,
                 ),
+
                 const SizedBox(height: 14),
 
                 _buildPillTextField(
@@ -101,22 +232,19 @@ class _ProfilePageState extends State<ProfilePage> {
                   label: "Age",
                   icon: Icons.cake_outlined,
                   keyboardType: TextInputType.number,
+                  enabled: true,
                 ),
 
                 const SizedBox(height: 30),
 
-                // Save Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Save logic
-                    },
+                    onPressed: _saveChanges,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen,
                       foregroundColor: Colors.white,
-                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),
                       ),
@@ -133,15 +261,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 const SizedBox(height: 18),
 
-                // Logout Button
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: _logout,
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.black12, width: 1.2),
+                      side: const BorderSide(
+                          color: Colors.black12, width: 1.2),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),
                       ),
@@ -171,30 +299,23 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool enabled = true,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+      enabled: enabled,
+      style: GoogleFonts.poppins(fontSize: 14),
       decoration: InputDecoration(
         hintText: label,
-        hintStyle: GoogleFonts.poppins(color: Colors.black45, fontSize: 14),
-        prefixIcon: Icon(icon, size: 20, color: Colors.black45),
+        prefixIcon: Icon(icon, size: 20),
         filled: true,
-        fillColor: Colors.white,
+        fillColor:
+            enabled ? Colors.white : Colors.grey.shade200,
         contentPadding:
-        const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.black12, width: 1),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.black12, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(32),
-          borderSide: const BorderSide(color: Colors.lightGreen, width: 1.8),
         ),
       ),
     );

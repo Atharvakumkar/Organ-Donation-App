@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'services/auth.dart';
+import 'homeScreen.dart';
+import 'signUpPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -55,8 +59,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navigate to sign up page
-                        // Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpPage()));
+                         Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const SignUpPage()),
+                              );
                       },
                       child: Text(
                         "Sign up",
@@ -125,7 +131,30 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () async {
+  if (email.text.isEmpty || passWord.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please fill all fields")),
+    );
+    return;
+  }
+
+  final result = await AuthService().login(
+    email: email.text.trim(),
+    password: passWord.text.trim(),
+  );
+
+  if (result == null) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result)),
+    );
+  }
+},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen,
                       foregroundColor: Colors.white,
