@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrganRegistrationForm extends StatefulWidget {
   final String selectedOrgan;
@@ -19,15 +20,83 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
   final phoneController = TextEditingController();
   final emergencyController = TextEditingController();
   final medicalHistoryController = TextEditingController();
+  final locationController = TextEditingController(); // ✅ NEW
 
+  String? selectedGender; // ✅ NEW
   bool smokingHistory = false;
   bool previousSurgery = false;
+  bool isLoading = false;
+
+  Future<void> submitData() async {
+    if (!_formKey.currentState!.validate() || selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please complete all fields"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await FirebaseFirestore.instance.collection("organ_donors").add({
+        "name": nameController.text.trim(),
+        "age": int.parse(ageController.text.trim()),
+        "bloodGroup": bloodController.text.trim(),
+        "phone": phoneController.text.trim(),
+        "emergencyContact": emergencyController.text.trim(),
+        "organ": widget.selectedOrgan,
+        "location": locationController.text.trim().toLowerCase(), // ✅
+        "gender": selectedGender, // ✅
+        "smokingHistory": smokingHistory,
+        "previousSurgery": previousSurgery,
+        "medicalHistory": medicalHistoryController.text.trim(),
+        "createdAt": Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "${widget.selectedOrgan} Donation Registration Successful",
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Clear form
+      nameController.clear();
+      ageController.clear();
+      bloodController.clear();
+      phoneController.clear();
+      emergencyController.clear();
+      medicalHistoryController.clear();
+      locationController.clear();
+
+      setState(() {
+        selectedGender = null;
+        smokingHistory = false;
+        previousSurgery = false;
+      });
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    setState(() => isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F9),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -37,7 +106,6 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
-                // 🔙 BACK + TITLE
                 Row(
                   children: [
                     GestureDetector(
@@ -56,76 +124,30 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
-
-                // 💚 INFO CARD
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    "Register as ${widget.selectedOrgan} Donor",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
 
                 _buildPillField("Full Name", nameController, Icons.person),
                 _buildPillField("Age", ageController, Icons.cake, isNumber: true),
                 _buildPillField("Blood Group", bloodController, Icons.bloodtype),
                 _buildPillField("Phone Number", phoneController, Icons.phone, isNumber: true),
                 _buildPillField("Emergency Contact", emergencyController, Icons.contact_phone),
+                _buildPillField("Location (City)", locationController, Icons.location_city), // ✅
 
                 const SizedBox(height: 16),
 
-                // 🧠 DYNAMIC SECTION
+                _buildGenderSelector(), // ✅ NEW
+
+                const SizedBox(height: 16),
+
                 _buildDynamicMedicalSection(),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 30),
 
-                // 📤 UPLOAD CARD
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: _cardDecoration(),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.upload_file, size: 36, color: Colors.lightGreen),
-                        const SizedBox(height: 10),
-                        Text(
-                          "Upload Identity Document",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // 🔥 BUTTON
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "${widget.selectedOrgan} Registration Successful",
-                              style: GoogleFonts.poppins(),
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: isLoading ? null : submitData,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen,
                       elevation: 0,
@@ -133,7 +155,9 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                         borderRadius: BorderRadius.circular(32),
                       ),
                     ),
-                    child: Text(
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
                       "Complete Registration",
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w500,
@@ -143,8 +167,6 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -153,7 +175,28 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
     );
   }
 
-  // 🔥 PILL INPUT (MATCH SIGNUP)
+  Widget _buildGenderSelector() {
+    final genders = ["Male", "Female", "Other"];
+
+    return Wrap(
+      spacing: 10,
+      children: genders.map((gender) {
+        final isSelected = selectedGender == gender;
+
+        return ChoiceChip(
+          label: Text(gender),
+          selected: isSelected,
+          selectedColor: Colors.lightGreen,
+          onSelected: (_) {
+            setState(() {
+              selectedGender = gender;
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildPillField(String label, TextEditingController controller, IconData icon,
       {bool isNumber = false}) {
     return Padding(
@@ -189,7 +232,6 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
     );
   }
 
-  // 🧠 DYNAMIC SECTION (UNCHANGED LOGIC, UPDATED UI)
   Widget _buildDynamicMedicalSection() {
     String organ = widget.selectedOrgan;
 
@@ -202,49 +244,22 @@ class _OrganRegistrationFormState extends State<OrganRegistrationForm> {
                   (val) => setState(() => previousSurgery = val)),
         ],
       );
-    } else if (organ == "Heart") {
-      return _buildPillField(
-          "Cardiac Medical History", medicalHistoryController, Icons.favorite);
-    } else if (organ == "Corneas" || organ == "Eyes") {
-      return _buildSwitchCard("Vision Problems History", previousSurgery,
-              (val) => setState(() => previousSurgery = val));
     } else {
       return _buildPillField(
           "Medical History", medicalHistoryController, Icons.medical_information);
     }
   }
 
-  // 🔘 SWITCH CARD (MODERN)
   Widget _buildSwitchCard(
       String title, bool value, Function(bool) onChanged) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: _cardDecoration(),
-      child: SwitchListTile(
-        value: value,
-        onChanged: onChanged,
-        activeColor: Colors.lightGreen,
-        title: Text(
-          title,
-          style: GoogleFonts.poppins(fontSize: 13),
-        ),
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      activeColor: Colors.lightGreen,
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontSize: 13),
       ),
-    );
-  }
-
-  // 🎨 CARD STYLE
-  BoxDecoration _cardDecoration() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          blurRadius: 15,
-          offset: const Offset(0, 8),
-        ),
-      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:organ_donation_app/bloodDonation.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'article_detail_screen.dart';
@@ -104,11 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          "Hello User",
-          style: GoogleFonts.poppins(
+          "DonorSync",
+          style: GoogleFonts.raleway(
             fontSize: 28,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            color: Colors.lightGreen,
           ),
         ),
       ),
@@ -133,8 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () =>
-                      _showComingSoon(context, "Blood Donation"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BloodDonationScreen(),
+                      ),
+                    );
+                  },
+
                   child: _bigDonorButton(
                     icon: Icons.bloodtype,
                     label: "Blood Donation",

@@ -151,7 +151,7 @@ class ArticleDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Why Organ Donation Matters 💚",
+                            "Why Organ Donation Matters",
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -198,14 +198,7 @@ class ArticleDetailScreen extends StatelessWidget {
                     const SizedBox(height: 22),
 
                     // ❤️ ACTION ROW
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        Icon(Icons.favorite_border, size: 26, color: Colors.black54),
-                        Icon(Icons.bookmark_border, size: 26, color: Colors.black54),
-                        Icon(Icons.share, size: 26, color: Colors.black54),
-                      ],
-                    ),
+
 
                     const SizedBox(height: 25),
                   ],
